@@ -1,0 +1,47 @@
+version: '2'
+services:
+  postgres:
+    image: postgres:9.6
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+  keycloak:
+    image: jboss/keycloak-postgres:2.2.0.CR1
+    links:
+      - postgres
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: openidctest
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      # Workaround for container using legacy Docker links, resulting in
+      # "WFLYCTL0211: Cannot resolve expression 'jdbc:postgresql://${env.POSTGRES_PORT_5432_TCP_ADDR}...")n
+      POSTGRES_PORT_5432_TCP_ADDR: postgres
+    expose:
+      - "8080"
+      - "9090"
+    # For local browser; you also need "keycloak" in your hosts file
+    ports:
+      - "8080:8080"
+      - "9990:9990"
+    # Uncomment the following and docker-compose up keycloak again to export realms
+    volumes:
+      - ./keycloak-setup/export:/export
+    #entrypoint:
+    #  - /opt/jboss/keycloak/bin/standalone.sh
+    #  - -Dkeycloak.migration.action=export
+    #  - -Dkeycloak.migration.provider=dir
+    #  - -Dkeycloak.migration.dir=/export
+  openidc:
+    build: ../openidc-jessie
+    expose:
+      - "80"
+    # For local browser; you also need "openidc" in your hosts file
+    ports:
+      - "80:80"
+    depends_on:
+      - keycloak
+    volumes:
+      - ./html-ajax:/var/www/html
