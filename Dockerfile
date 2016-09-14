@@ -1,4 +1,4 @@
-FROM solsson/node:6
+FROM node:6.5
 
 WORKDIR /usr/src/app
 
